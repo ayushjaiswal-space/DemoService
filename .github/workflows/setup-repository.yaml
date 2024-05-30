@@ -1,0 +1,205 @@
+name: Setup repository
+on:
+  push:
+    paths:
+      - cookiecutter.json
+    branches:
+      - 'master'
+permissions: write-all
+jobs:
+  setup:
+    name: Reinitialize repository
+    if: ${{ github.event.head_commit.message != 'Initial commit' }}
+    runs-on: [self-hosted-aws, ubuntu]
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.COOKIE_CUTTER_TOKEN }}
+    steps:
+      - name: Do not run scaffolding on template repository
+        shell: bash
+        # This workflow runs when the `cookiecutter.json` file is modified.
+        # This is the trick to re-init a repository, but we don't want to
+        # run this action if this file is modified in the origin template repository.
+        #
+        # Using the GitHub rest API allows us to identify if the current repository
+        # is a template repository or not.
+        run: |
+          curl --silent -X GET \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.baptiste-preview+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY \
+            | jq --exit-status '.is_template == false';
+
+      - uses: actions/checkout@v3
+        with:
+          # Comminting workflow files using the regular GITHUB_TOKEN will fail with
+          # `Git Error: Refusing to allow a GitHub App to create or update workflow without workflows permission`.
+          # This is by design to prevent third-parties from adding malicious workflow files.
+          #
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          # Checkout my blog post https://stefanbuck.com/blog for alternative options
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Check repository name
+        id: check_repo_name
+        run: |
+          if [[ "${{ github.event.repository.name }}" =~ ^Space\.Service\..* ]]; then
+            echo "::set-output name=match::true"
+          else
+            echo "::set-output name=match::false"
+          fi
+
+      - name: Add service to OpsGenie
+        if: steps.check_repo_name.outputs.match == 'true'
+        run: |
+          teamId=$(jq -r '.TeamId' ./cookiecutter.json)
+          echo "teamId=$teamId" >> $GITHUB_ENV
+          echo $teamId
+          curl -X POST https://api.opsgenie.com/v1/services \
+          -H "Authorization: GenieKey ${{ secrets.OPSGENIE_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d "{
+                \"name\": \"${{ github.event.repository.name }}\",
+                \"teamId\": \"$teamId\",
+                \"description\": \"This microservice belongs to $teamId\"
+              }"
+
+      - name: Install dependencies
+        run: pip install cookiecutter
+
+      - name: Scaffolding repository
+        # cookiecutter is command-line utility to create projects from templates
+        # https://github.com/cookiecutter/cookiecutter
+        #
+        # --no-input      Do not prompt for parameters and only use
+        #                 cookiecutter.json file content
+        #
+        # --output-dir    Where to output the generated project dir into
+        run: cookiecutter . --no-input --output-dir ./cookiecutter-temp
+
+      - name: Prepare root directory
+        shell: bash
+        # Remove all files and folder except .git/ and cookiecutter-temp/
+        run: |
+          find ./ -maxdepth 1 \
+          ! -name '.git' \
+          ! -name 'cookiecutter-temp' \
+          ! -name '.' \
+          ! -name '.gitignore' \
+          ! -name 'github_configs' \
+          ! -name 'charts' \
+          ! -name 'argocd' \
+          ! -exec rm -rf {} +
+          mv github_configs .github
+
+      - name: Move files to root
+        shell: bash
+        # The cookiecutter-temp/ folder contains a single folder which is the
+        # generated project by cookiecutter. We want to move all the project
+        # files into the root directory so we can reinitialize git in the next step
+        run: |
+          rsync -r ./cookiecutter-temp/*/ . && \
+          rm -rf ./cookiecutter-temp/
+
+      - name: Reinitialize git repository
+        shell: bash
+        # Reinitialize git after scaffolding this repository.
+        # We use `git checkout --orphan` to create a branch in a git init-like state.
+        # By force pushing this as `main` we end up with a new clean git history.
+        run: |
+          TMP_CURRENT_USER_NAME=$(git log -1 --pretty=format:'%an')
+          TMP_CURRENT_USER_EMAIL=$(git log -1 --pretty=format:'%ae')
+          git config user.email "$TMP_CURRENT_USER_EMAIL"
+          git config user.name "$TMP_CURRENT_USER_NAME"
+          git checkout --orphan temp-branch 
+          git add .
+          git commit -m 'First commit [no ci]'
+          git branch -m master old-master
+          git branch -m temp-branch master
+          git push -f origin master
+
+      - name: create infra repository
+        run: |
+          echo $GITHUB_CONTEXT
+          cd charts/k8s-service
+          git init -b master
+          git add .
+          git commit -m "initial commit"
+          gh repo create $GITHUB_REPOSITORY.infra --private --source=. --push --remote=upstream
+          gh api --method PUT -H "Accept: application/vnd.github+json" /repos/$GITHUB_REPOSITORY.infra/collaborators/${{ github.actor }} -f permission=admin
+        env: 
+          GITHUB_TOKEN: ${{ secrets.COOKIE_CUTTER_TOKEN }}
+      - uses: clowdhaus/argo-cd-action/@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          version: 2.5.5
+          command: version
+          options: --client
+      - uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: 2.5.5
+          command: login argo.shared.int.spaceneobank.com:443 --username admin --password ${{ secrets.ARGOCD_ADMIN_TOKEN }} --insecure
+          #options: --client
+      - uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: 2.5.5
+          command: repo add ${{ github.server_url }}/${{ github.repository }}.infra.git --username space-int-github-cicd --password ${{ secrets.SPACEINTL_GIT_CICD_REPO }}
+          #options: --client
+
+      - name: move argocd file
+        run: |
+          name=${{ github.event.repository.name }}
+          name=$(echo "${name,,}")
+          cd argocd
+          git clone https://.:${{ secrets.COOKIE_CUTTER_TOKEN }}@github.com/SpaceBank/$ARGOCD_REPO.git $ARGOCD_REPO
+          cp argocd.yaml $ARGOCD_REPO/argocd/${name}.yaml
+          cd $ARGOCD_REPO
+          git add argocd/${name}.yaml
+          git commit -m "add ${name} yaml file"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.COOKIE_CUTTER_TOKEN }}
+          ARGOCD_REPO: 'argocd'
+
+      - name: cleanup folders
+        run: |
+          git checkout master
+          rm -rf argocd
+          rm -rf charts
+          rm -f .github/workflows/setup-repository.yaml
+          git add .
+          git commit --amend -m "First commit"
+          git push --force origin master
+
+      - name: Add repository to Metrik
+        shell: bash
+        run : |
+          curl --location '${{ vars.METRIK_URL }}/api/project/${{ vars.METRIK_PROJECT_ID }}/pipeline' \
+            --header 'Content-Type: application/json' \
+            --data '{"type": "GITHUB_ACTIONS","name": "${{ github.event.repository.name }}","url": "https://api.github.com/repos/SpaceBank/${{ github.event.repository.name }}","credential": "${{ secrets.METRIK_TOKEN }}"}'
+
+      - name: Add service to Jira Asset Manager
+        run: |
+          curl --request POST \
+          --url 'https://api.atlassian.com/jsm/assets/workspace/1be9e6ab-23d3-4044-be51-802c29c0229a/v1/object/create' \
+          --header 'Authorization: Basic ${{ secrets.JIRA_ASSETS_MANAGER_API_KEY }}' \
+          --header 'Accept: application/json' \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "schemaId": "7",
+            "objectTypeId": "99",
+            "attributes": [
+                {
+                    "objectTypeAttributeId": "1093",
+                    "objectAttributeValues": [
+                        {
+                            "value": "'"${{ github.event.repository.name }}"'"
+                        }
+                      ]
+                }
+            ]
+          }'

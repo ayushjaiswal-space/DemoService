@@ -1,0 +1,3 @@
+.*\.talismanrc
+.*\.md
+.*\.Local.json

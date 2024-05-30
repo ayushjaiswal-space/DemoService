@@ -1,0 +1,66 @@
+applicationName: "[[NamespaceProjectNameLower]]"
+applicationPath: "/[[ProjectNameLower]]/"
+
+containerImage:
+  repository: spaceinternational/[[NamespaceProjectNameLower]]
+  tag: ""
+  pullPolicy: Always
+
+replicaCount: 1
+
+istio:
+  enabled: true
+
+terminationGracePeriodSeconds: 180
+
+envVars:
+  ASPNETCORE_ENVIRONMENT: "QA"
+  PATH_BASE: "/[[ProjectNameLower]]"
+  GRACEFULSHUTDOWNTIMEOUTSECONDS: "60"
+  SHUTDOWNTIMEOUTSECONDS: "120"
+  GIT_COMMIT: ""
+
+livenessProbe:
+  httpGet:
+    path: /[[ProjectNameLower]]/health/liveness
+    port: http
+  initialDelaySeconds: 20
+  periodSeconds: 3
+  timeoutSeconds: 5
+  failureThreshold: 2
+  
+readinessProbe:
+  httpGet:
+    path: /[[ProjectNameLower]]/health/readiness
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 3
+  timeoutSeconds: 5
+  failureThreshold: 2
+
+serviceAccount:
+  name: "[[NamespaceProjectNameLower]]"
+  create: true
+  annotations: {}
+  labels: {}
+
+vault:
+  enabled: true
+  volumePath: "/settings"
+  secrets:
+    - name: "kv/GlobalSecrets"
+      mountFileName: "globalsettings.json"
+    - name: "kv/ServiceSecrets/[[NamespaceProjectNameLower]]"
+      mountFileName: "appsettings.json"
+
+secrets:
+  kafka-ca:
+    as: volume
+    mountPath: /settings/ssl
+
+service:
+  enabled: true
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/[[ProjectNameLower]]/metrics"
+    prometheus.io/port: "80"

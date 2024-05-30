@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+dotnet test --configuration Release --no-restore ../../ --results-directory $(pwd)/../../tmp/coverage/test-results --collect:"XPlat Code Coverage" --logger:"xunit;LogFilePath=TestResults/test_result.xml" --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=json,opencover,cobertura -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*Persistence/Migrations/**.cs,**/*Infrastructure/Connected Services/**/**.cs"

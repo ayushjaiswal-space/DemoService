@@ -1,0 +1,19 @@
+name: cd
+run-name: cd ${{ inputs.env }}
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: string
+
+jobs:
+  cd:
+    uses: SpaceBank/Space.Service.Workflows/.github/workflows/cd.yaml@master
+    with:
+      env: ${{ inputs.env }}
+      service_name: [[Namespace]].[[ProjectName]]
+      argocd_app_name: [[NamespaceProjectNameLower]]
+      pact_can_i_deploy_check: true
+      pact_record_deployment: true
+    secrets: inherit

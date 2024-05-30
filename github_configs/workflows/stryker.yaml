@@ -1,0 +1,12 @@
+name: stryker
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 22 * * *"
+
+jobs:
+  stryker:
+    uses: SpaceBank/Space.Service.Workflows/.github/workflows/stryker-net8.yaml@master
+    with:
+      service_name: [[Namespace]].[[ProjectName]]
+    secrets: inherit

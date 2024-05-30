@@ -1,0 +1,17 @@
+name: dora
+on:
+  workflow_dispatch:
+    inputs:
+      success:
+        required: true
+        type: boolean
+
+jobs:
+  dora:
+    runs-on: [self-hosted, ubuntu, int]
+    steps:
+    - name: DORA
+      run: |
+        if [[ "${{ inputs.success }}" != "true" ]]; then
+          exit 1
+        fi

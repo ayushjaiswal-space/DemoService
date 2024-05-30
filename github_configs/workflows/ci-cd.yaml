@@ -1,0 +1,27 @@
+name: ci-cd
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - 'cookiecutter.json'
+      - 'README.md'
+      - '**.yaml'
+      - '**.yml'
+      - '.editorconfig'
+      - '.talismanrc'
+
+jobs:
+  ci-cd:
+    uses: SpaceBank/Space.Service.Workflows/.github/workflows/ci-cd-net8.yaml@master
+    with:
+      service_name: [[Namespace]].[[ProjectName]]
+      docker_image_name: [[NamespaceProjectNameLower]]
+      argocd_app_name: [[NamespaceProjectNameLower]]
+      environments: '[ "dev-uz" ]'
+      pact_publish_provider_contract: true
+      pact_publish_consumer_contract: true
+      pact_can_i_deploy_check: true
+      pact_record_deployment: true
+    secrets: inherit

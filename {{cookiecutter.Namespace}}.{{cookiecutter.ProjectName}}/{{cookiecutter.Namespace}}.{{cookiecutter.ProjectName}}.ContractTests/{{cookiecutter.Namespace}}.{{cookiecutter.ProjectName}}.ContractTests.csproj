@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="AutoFixture" Version="4.18.1" />
+	  <PackageReference Include="coverlet.collector" Version="6.0.2">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="GitHubActionsTestLogger" Version="2.3.3">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+	  <PackageReference Include="PactNet" Version="4.5.0" />
+	  <PackageReference Include="RestEase" Version="1.6.4" />
+	  <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="xunit" Version="2.7.1" />
+	  <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Space.Service.Common.CodeAnalyzers" Version="1.0.28">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="XunitXml.TestLogger" Version="3.1.20" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="contracts\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Application\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Application.csproj" />
+  </ItemGroup>
+
+</Project>

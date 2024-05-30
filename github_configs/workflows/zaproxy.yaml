@@ -1,0 +1,12 @@
+name: zaproxy
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 0 * * 1'
+
+jobs:
+  zaproxy:
+    uses: SpaceBank/Space.Service.Workflows/.github/workflows/zaproxy.yaml@master
+    with:
+      service_path: [[ProjectNameLower]]
+    secrets: inherit

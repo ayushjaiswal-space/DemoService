@@ -1,0 +1,10 @@
+name: pull-request
+on: 
+  pull_request
+
+jobs:
+  pull-request:
+    uses: SpaceBank/Space.Service.Workflows/.github/workflows/pull-request-net8.yaml@master
+    with:
+      service_name: [[Namespace]].[[ProjectName]]
+    secrets: inherit

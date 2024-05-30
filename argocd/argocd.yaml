@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: [[NamespaceProjectNameLower]]
+spec:
+  generators:
+  - list:
+      elements:
+      - cluster: dev-uz
+        url: https://10.154.231.10:6443
+      - cluster: automation-uz
+        url: https://10.154.241.70:6443
+      - cluster: qa-uz
+        url: https://10.154.236.10:6443
+      - cluster: preprod-uz
+        url: https://10.154.246.40:6443
+#      - cluster: prod-uz
+#        url: https://10.154.250.40:6443
+  template:
+    metadata:
+      name: '{{cluster}}-[[NamespaceProjectNameLower]]'
+    spec:
+      project: default
+      syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+      sources:
+      - repoURL: https://github.com/SpaceBank/[[Namespace]].[[ProjectName]].infra.git
+        targetRevision: HEAD
+        ref: values
+      - repoURL: 'https://charts.shared.int.spaceneobank.com'
+        chart: k8s-service
+        targetRevision: 0.0.18
+        helm:
+          valueFiles:
+          - '$values/values/{{cluster}}.yaml'
+      destination:
+        server: '{{url}}'
+        namespace: default

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Space.Service.Common.Caching" Version="2.0.19" />
+    <PackageReference Include="Space.Service.Common.Mapping" Version="1.0.45" />
+    <PackageReference Include="Space.Service.Common.Mediator" Version="1.0.106" />
+    <PackageReference Include="Space.Service.Common.RestClient" Version="1.0.140" />
+    <PackageReference Include="Space.Service.Common.EventBus" Version="1.0.137" />
+    <PackageReference Include="Space.Service.Common.Factory" Version="1.0.68" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Space.Service.Common.CodeAnalyzers" Version="1.0.28">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Domain\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,6 @@
+fileignoreconfig:
+- filename: .github/workflows/build.yaml
+  checksum: 5284bbe97f965d3a11c674d4a79bb72f98903201c115ac6c0f9ce579f966e123
+- filename: '{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}/tools/codeCoverage/run-tests-with-coverage-ci.sh'
+  checksum: 3fc12e87833a036fd5a48769fa99851f5216bdc71b0a639b427e4b782be044e2
+version: ""

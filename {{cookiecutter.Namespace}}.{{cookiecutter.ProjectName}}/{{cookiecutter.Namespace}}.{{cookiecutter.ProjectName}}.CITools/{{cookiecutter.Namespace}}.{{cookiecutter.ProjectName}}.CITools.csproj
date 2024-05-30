@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Api\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Api.csproj" />
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Application\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Application.csproj" />
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Domain\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Domain.csproj" />
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Infrastructure\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Infrastructure.csproj" />
+    <ProjectReference Include="..\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Persistence\{{cookiecutter.Namespace}}.{{cookiecutter.ProjectName}}.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Space.Service.Common.Codeanalyzers" Version="1.0.27">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Space.Service.Common.ContractsGenerator" Version="1.0.6" />
+    <PackageReference Include="Space.Service.Common.EventSchemaGenerator" Version="1.0.33" />
+  </ItemGroup>
+
+</Project>
